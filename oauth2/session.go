@@ -58,11 +58,16 @@ func NewSessionWithCustomClaims(ctx context.Context, p *config.DefaultProvider, 
 }
 
 func (s *Session) GetJWTClaims() jwt.JWTClaimsContainer {
+	var actor interface{}
+	if s.Extra != nil {
+		actor = s.Extra["act"]
+	}
+
 	// remove any reserved claims from the custom claims
 	allowedClaimsFromConfigWithoutReserved := slices.DeleteFunc(s.AllowedTopLevelClaims, func(s string) bool {
 		switch s {
 		// these claims are reserved and should not be overridden
-		case "iss", "sub", "aud", "exp", "nbf", "iat", "jti", "client_id", "scp", "ext":
+		case "iss", "sub", "aud", "exp", "nbf", "iat", "jti", "client_id", "scp", "ext", "act":
 			return true
 		}
 		return false
@@ -71,6 +76,9 @@ func (s *Session) GetJWTClaims() jwt.JWTClaimsContainer {
 	// our new extra map which will be added to the jwt
 	topLevelExtraWithMirrorExt := make(map[string]interface{}, len(allowedClaimsFromConfigWithoutReserved)+2)
 	topLevelExtraWithMirrorExt["client_id"] = s.ClientID
+	if actor != nil {
+		topLevelExtraWithMirrorExt["act"] = actor
+	}
 
 	// setting every allowed claim top level in jwt with respective value
 	for _, allowedClaim := range allowedClaimsFromConfigWithoutReserved {
@@ -121,6 +129,24 @@ func (s *Session) GetJWTClaims() jwt.JWTClaimsContainer {
 	}
 
 	return claims
+}
+
+// GetAccessTokenIssuer returns the issuer stored in the session. It is used by
+// token exchange to ensure that subject and actor tokens were issued by this
+// authorization server.
+func (s *Session) GetAccessTokenIssuer() string {
+	if s == nil || s.DefaultSession == nil || s.DefaultSession.Claims == nil {
+		return ""
+	}
+	return s.DefaultSession.Claims.Issuer
+}
+
+// SetTokenExchangeActor adds the RFC 8693 actor claim to the session.
+func (s *Session) SetTokenExchangeActor(subject string) {
+	if s.Extra == nil {
+		s.Extra = map[string]interface{}{}
+	}
+	s.Extra["act"] = map[string]interface{}{"sub": subject}
 }
 
 func (s *Session) GetJWTHeader() *jwt.Headers {

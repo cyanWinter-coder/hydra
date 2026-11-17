@@ -33,10 +33,18 @@ const (
 	GrantTypeAuthorizationCode GrantType = "authorization_code"
 	GrantTypePassword          GrantType = "password"
 	GrantTypeClientCredentials GrantType = "client_credentials"
-	GrantTypeJWTBearer         GrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer"  //nolint:gosec // this is not a hardcoded credential
-	GrantTypeDeviceCode        GrantType = "urn:ietf:params:oauth:grant-type:device_code" //nolint:gosec // this is not a hardcoded credential
+	GrantTypeJWTBearer         GrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer"     //nolint:gosec // this is not a hardcoded credential
+	GrantTypeDeviceCode        GrantType = "urn:ietf:params:oauth:grant-type:device_code"    //nolint:gosec // this is not a hardcoded credential
+	GrantTypeTokenExchange     GrantType = "urn:ietf:params:oauth:grant-type:token-exchange" //nolint:gosec // this is not a hardcoded credential
 
 	BearerAccessToken string = "bearer"
+)
+
+const (
+	// TokenTypeAccessTokenURN is the RFC 8693 token type for access tokens.
+	TokenTypeAccessTokenURN TokenType = "urn:ietf:params:oauth:token-type:access_token"
+	// TokenTypeJWTURN is the RFC 8693 token type for JSON Web Tokens.
+	TokenTypeJWTURN TokenType = "urn:ietf:params:oauth:token-type:jwt"
 )
 
 // OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.

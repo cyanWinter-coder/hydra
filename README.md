@@ -90,6 +90,7 @@ Ory Hydra implements Open Standards set by the IETF:
 - [OAuth 2.0 Dynamic Client Registration Management Protocol](https://datatracker.ietf.org/doc/html/rfc7592)
 - [Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
 - [JSON Web Token (JWT) Profile for OAuth 2.0 Client Authentication and Authorization Grants](https://tools.ietf.org/html/rfc7523)
+- [OAuth 2.0 Token Exchange](https://tools.ietf.org/html/rfc8693)
 
 and the OpenID Foundation:
 

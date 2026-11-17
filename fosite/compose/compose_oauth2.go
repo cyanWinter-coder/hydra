@@ -57,6 +57,38 @@ func OAuth2RefreshTokenGrantFactory(config fosite.Configurator, storage fosite.S
 	}
 }
 
+// OAuth2TokenExchangeGrantFactory creates an RFC 8693 token exchange handler.
+func OAuth2TokenExchangeGrantFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
+	tokenExchangeStorage, ok := storage.(interface {
+		fosite.Transactional
+		oauth2.AccessTokenStorageProvider
+		oauth2.TokenRevocationStorageProvider
+		oauth2.TokenExchangeStorageProvider
+	})
+	if !ok {
+		return nil
+	}
+	tokenExchangeStrategy, ok := strategy.(oauth2.AccessTokenStrategyProvider)
+	if !ok {
+		return nil
+	}
+	tokenExchangeConfig, ok := config.(interface {
+		fosite.AccessTokenLifespanProvider
+		fosite.AccessTokenIssuerProvider
+		fosite.ScopeStrategyProvider
+		fosite.AudienceStrategyProvider
+		oauth2.TokenExchangeConfigProvider
+	})
+	if !ok {
+		return nil
+	}
+	return &oauth2.TokenExchangeGrantHandler{
+		Strategy: tokenExchangeStrategy,
+		Storage:  tokenExchangeStorage,
+		Config:   tokenExchangeConfig,
+	}
+}
+
 // OAuth2AuthorizeImplicitFactory creates an OAuth2 implicit grant ("authorize implicit flow") handler and registers
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeImplicitFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {

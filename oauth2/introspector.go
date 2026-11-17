@@ -70,4 +70,7 @@ type Introspection struct {
 
 	// Extra is arbitrary data set by the session.
 	Extra map[string]interface{} `json:"ext,omitempty"`
+
+	// Actor is the RFC 8693 actor identity that performed the token exchange.
+	Actor map[string]interface{} `json:"act,omitempty"`
 }

@@ -22,6 +22,7 @@ type FositeStorer interface {
 	oauth2.AccessTokenStorage
 	oauth2.RefreshTokenStorage
 	oauth2.TokenRevocationStorage
+	oauth2.TokenExchangeStorage
 	openid.OpenIDConnectRequestStorage
 	pkce.PKCERequestStorage
 	rfc7523.RFC7523KeyStorage

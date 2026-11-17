@@ -494,6 +494,16 @@ func (p *Persister) SetClientAssertionJWTRaw(ctx context.Context, jti *oauth2.Bl
 	return sqlcon.HandleError(p.CreateWithNetwork(ctx, jti))
 }
 
+// MarkTokenExchangeSubjectTokenUsed atomically records a subject token as
+// consumed. The JTI blacklist table is a generic, network-scoped replay cache;
+// prefixing the key prevents collisions with client assertion JTIs.
+func (p *Persister) MarkTokenExchangeSubjectTokenUsed(ctx context.Context, tokenType, signature string, expiresAt time.Time) (err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.MarkTokenExchangeSubjectTokenUsed")
+	defer otelx.End(span, &err)
+
+	return p.SetClientAssertionJWT(ctx, "token-exchange:"+tokenType+":"+signature, expiresAt)
+}
+
 // CreateAuthorizeCodeSession implements AuthorizeCodeStorage
 func (p *Persister) CreateAuthorizeCodeSession(ctx context.Context, signature string, requester fosite.Requester) error {
 	return otelx.WithSpan(ctx, "persistence.sql.CreateAuthorizeCodeSession", func(ctx context.Context) error {

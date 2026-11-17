@@ -59,6 +59,7 @@ var (
 		compose.OAuth2AuthorizeImplicitFactory,
 		compose.OAuth2ClientCredentialsGrantFactory,
 		compose.OAuth2RefreshTokenGrantFactory,
+		compose.OAuth2TokenExchangeGrantFactory,
 		compose.OpenIDConnectExplicitFactory,
 		compose.OpenIDConnectHybridFactory,
 		compose.OpenIDConnectImplicitFactory,
@@ -217,6 +218,26 @@ func (c *Config) GetRedirectSecureChecker(context.Context) func(context.Context,
 
 func (c *Config) GetAccessTokenIssuer(ctx context.Context) string {
 	return c.deps.Config().IssuerURL(ctx).String()
+}
+
+func (c *Config) GetTokenExchangeAllowCrossClient(ctx context.Context) bool {
+	return c.deps.Config().TokenExchangeAllowCrossClient(ctx)
+}
+
+func (c *Config) GetTokenExchangeEnabled(ctx context.Context) bool {
+	return c.deps.Config().TokenExchangeEnabled(ctx)
+}
+
+func (c *Config) GetTokenExchangeRequireActor(ctx context.Context) bool {
+	return c.deps.Config().TokenExchangeRequireActor(ctx)
+}
+
+func (c *Config) GetTokenExchangeAllowedSubjectTokenTypes(ctx context.Context) []string {
+	return c.deps.Config().TokenExchangeAllowedSubjectTokenTypes(ctx)
+}
+
+func (c *Config) GetTokenExchangeAllowedActorTokenTypes(ctx context.Context) []string {
+	return c.deps.Config().TokenExchangeAllowedActorTokenTypes(ctx)
 }
 
 func (c *Config) GetJWTScopeField(ctx context.Context) jwt.JWTScopeFieldEnum {

@@ -339,6 +339,26 @@ func (c *Config) GetGrantTypeJWTBearerCanSkipClientAuth(ctx context.Context) boo
 	return c.GrantTypeJWTBearerCanSkipClientAuth
 }
 
+func (c *Config) GetTokenExchangeAllowCrossClient(context.Context) bool {
+	return true
+}
+
+func (c *Config) GetTokenExchangeEnabled(context.Context) bool {
+	return true
+}
+
+func (c *Config) GetTokenExchangeRequireActor(context.Context) bool {
+	return false
+}
+
+func (c *Config) GetTokenExchangeAllowedSubjectTokenTypes(context.Context) []string {
+	return []string{string(TokenTypeAccessTokenURN), string(TokenTypeJWTURN)}
+}
+
+func (c *Config) GetTokenExchangeAllowedActorTokenTypes(context.Context) []string {
+	return []string{string(TokenTypeAccessTokenURN), string(TokenTypeJWTURN)}
+}
+
 // GetEnforcePKCE If set to true, public clients must use PKCE.
 func (c *Config) GetEnforcePKCE(ctx context.Context) bool {
 	return c.EnforcePKCE

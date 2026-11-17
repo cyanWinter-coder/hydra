@@ -115,6 +115,11 @@ const (
 	KeyPreserveExtClaims                         = "oauth2.preserve_ext_claims"
 	KeyRefreshTokenRotationGracePeriod           = "oauth2.grant.refresh_token.rotation_grace_period"      // #nosec G101
 	KeyRefreshTokenRotationGraceReuseCount       = "oauth2.grant.refresh_token.rotation_grace_reuse_count" // #nosec G101
+	KeyTokenExchangeEnabled                      = "oauth2.grant.token_exchange.enabled"
+	KeyTokenExchangeAllowCrossClient             = "oauth2.grant.token_exchange.allow_cross_client"
+	KeyTokenExchangeRequireActor                 = "oauth2.grant.token_exchange.require_actor"
+	KeyTokenExchangeSubjectTokenTypes            = "oauth2.grant.token_exchange.subject_token_types"
+	KeyTokenExchangeActorTokenTypes              = "oauth2.grant.token_exchange.actor_token_types"
 	KeyOAuth2GrantJWTIDOptional                  = "oauth2.grant.jwt.jti_optional"
 	KeyOAuth2GrantJWTIssuedDateOptional          = "oauth2.grant.jwt.iat_optional"
 	KeyOAuth2GrantJWTMaxDuration                 = "oauth2.grant.jwt.max_ttl"
@@ -259,6 +264,32 @@ func (p *DefaultProvider) MirrorTopLevelClaims(ctx context.Context) bool {
 
 func (p *DefaultProvider) PreserveExtClaims(ctx context.Context) bool {
 	return p.getProvider(ctx).BoolF(KeyPreserveExtClaims, false)
+}
+
+func (p *DefaultProvider) TokenExchangeEnabled(ctx context.Context) bool {
+	return p.getProvider(ctx).BoolF(KeyTokenExchangeEnabled, true)
+}
+
+func (p *DefaultProvider) TokenExchangeAllowCrossClient(ctx context.Context) bool {
+	return p.getProvider(ctx).BoolF(KeyTokenExchangeAllowCrossClient, true)
+}
+
+func (p *DefaultProvider) TokenExchangeRequireActor(ctx context.Context) bool {
+	return p.getProvider(ctx).BoolF(KeyTokenExchangeRequireActor, false)
+}
+
+func (p *DefaultProvider) TokenExchangeAllowedSubjectTokenTypes(ctx context.Context) []string {
+	return p.getProvider(ctx).StringsF(KeyTokenExchangeSubjectTokenTypes, []string{
+		"urn:ietf:params:oauth:token-type:access_token",
+		"urn:ietf:params:oauth:token-type:jwt",
+	})
+}
+
+func (p *DefaultProvider) TokenExchangeAllowedActorTokenTypes(ctx context.Context) []string {
+	return p.getProvider(ctx).StringsF(KeyTokenExchangeActorTokenTypes, []string{
+		"urn:ietf:params:oauth:token-type:access_token",
+		"urn:ietf:params:oauth:token-type:jwt",
+	})
 }
 
 func (p *DefaultProvider) SubjectTypesSupported(ctx context.Context, additionalSources ...AccessTokenStrategySource) []string {

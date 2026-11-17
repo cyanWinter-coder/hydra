@@ -137,6 +137,11 @@ func (m *RegistrySQL) TokenRevocationStorage() foauth2.TokenRevocationStorage {
 	return m.OAuth2Storage()
 }
 
+// TokenExchangeStorage implements foauth2.TokenExchangeStorageProvider.
+func (m *RegistrySQL) TokenExchangeStorage() foauth2.TokenExchangeStorage {
+	return m.OAuth2Storage()
+}
+
 // ResourceOwnerPasswordCredentialsGrantStorage implements foauth2.ResourceOwnerPasswordCredentialsGrantStorage
 func (m *RegistrySQL) ResourceOwnerPasswordCredentialsGrantStorage() foauth2.ResourceOwnerPasswordCredentialsGrantStorage {
 	return m.OAuth2Storage()

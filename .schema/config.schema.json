@@ -853,6 +853,50 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "token_exchange": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Configures RFC 8693 OAuth 2.0 Token Exchange. Clients must additionally list `urn:ietf:params:oauth:grant-type:token-exchange` in their `grant_types`.",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enables or disables OAuth 2.0 Token Exchange.",
+                  "default": true
+                },
+                "allow_cross_client": {
+                  "type": "boolean",
+                  "description": "Allow a client to exchange a subject or actor token that was issued to a different client. Scope and audience policy is always enforced for the requesting client.",
+                  "default": true
+                },
+                "require_actor": {
+                  "type": "boolean",
+                  "description": "Require an actor token for every token exchange request.",
+                  "default": false
+                },
+                "subject_token_types": {
+                  "type": "array",
+                  "description": "Allowed RFC 8693 subject_token_type values.",
+                  "default": [
+                    "urn:ietf:params:oauth:token-type:access_token",
+                    "urn:ietf:params:oauth:token-type:jwt"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "actor_token_types": {
+                  "type": "array",
+                  "description": "Allowed RFC 8693 actor_token_type values.",
+                  "default": [
+                    "urn:ietf:params:oauth:token-type:access_token",
+                    "urn:ietf:params:oauth:token-type:jwt"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
             "refresh_token": {
               "type": "object",
               "properties": {

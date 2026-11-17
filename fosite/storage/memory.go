@@ -121,6 +121,10 @@ func (s *MemoryStore) TokenRevocationStorage() oauth2.TokenRevocationStorage {
 	return s
 }
 
+func (s *MemoryStore) TokenExchangeStorage() oauth2.TokenExchangeStorage {
+	return s
+}
+
 func (s *MemoryStore) ResourceOwnerPasswordCredentialsGrantStorage() oauth2.ResourceOwnerPasswordCredentialsGrantStorage {
 	return s
 }
@@ -293,6 +297,10 @@ func (s *MemoryStore) SetClientAssertionJWT(_ context.Context, jti string, exp t
 
 	s.BlacklistedJTIs[jti] = exp
 	return nil
+}
+
+func (s *MemoryStore) MarkTokenExchangeSubjectTokenUsed(ctx context.Context, tokenType, signature string, expiresAt time.Time) error {
+	return s.SetClientAssertionJWT(ctx, "token-exchange:"+tokenType+":"+signature, expiresAt)
 }
 
 func (s *MemoryStore) CreateAuthorizeCodeSession(_ context.Context, signature string, req fosite.Requester) error {

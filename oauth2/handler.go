@@ -516,6 +516,10 @@ func (h *Handler) discoverOidcConfiguration(w http.ResponseWriter, r *http.Reque
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
+	grantTypes := []string{"authorization_code", "implicit", "client_credentials", "refresh_token", "urn:ietf:params:oauth:grant-type:device_code"}
+	if h.c.TokenExchangeEnabled(ctx) {
+		grantTypes = append(grantTypes, string(fosite.GrantTypeTokenExchange))
+	}
 	h.r.Writer().Write(w, r, &oidcConfiguration{
 		Issuer:                                 h.c.IssuerURL(ctx).String(),
 		AuthURL:                                h.c.OAuth2AuthURL(ctx).String(),
@@ -533,7 +537,7 @@ func (h *Handler) discoverOidcConfiguration(w http.ResponseWriter, r *http.Reque
 		IDTokenSigningAlgValuesSupported:       []string{key.Algorithm},
 		IDTokenSignedResponseAlg:               []string{key.Algorithm},
 		UserinfoSignedResponseAlg:              []string{key.Algorithm},
-		GrantTypesSupported:                    []string{"authorization_code", "implicit", "client_credentials", "refresh_token", "urn:ietf:params:oauth:grant-type:device_code"},
+		GrantTypesSupported:                    grantTypes,
 		ResponseModesSupported:                 []string{"query", "fragment", "form_post"},
 		UserinfoSigningAlgValuesSupported:      []string{"none", key.Algorithm},
 		RequestParameterSupported:              true,
@@ -1060,6 +1064,10 @@ func (h *Handler) introspectOAuth2Token(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	var actor map[string]interface{}
+	if value, ok := session.Extra["act"].(map[string]interface{}); ok {
+		actor = value
+	}
 	if err = json.NewEncoder(w).Encode(&Introspection{
 		Active:            resp.IsActive(),
 		ClientID:          resp.GetAccessRequester().GetClient().GetID(),
@@ -1069,6 +1077,7 @@ func (h *Handler) introspectOAuth2Token(w http.ResponseWriter, r *http.Request) 
 		Subject:           session.GetSubject(),
 		Username:          session.GetUsername(),
 		Extra:             session.Extra,
+		Actor:             actor,
 		Audience:          audience,
 		Issuer:            h.c.IssuerURL(ctx).String(),
 		ObfuscatedSubject: obfuscated,
@@ -1105,6 +1114,21 @@ type _ struct {
 
 	// in: formData
 	ClientID string `json:"client_id"`
+
+	// in: formData
+	SubjectToken string `json:"subject_token"`
+
+	// in: formData
+	SubjectTokenType string `json:"subject_token_type"`
+
+	// in: formData
+	ActorToken string `json:"actor_token"`
+
+	// in: formData
+	ActorTokenType string `json:"actor_token_type"`
+
+	// in: formData
+	RequestedTokenType string `json:"requested_token_type"`
 }
 
 // OAuth2 Token Exchange Result
@@ -1131,6 +1155,9 @@ type _ struct {
 
 	// The type of the token issued
 	TokenType string `json:"token_type"`
+
+	// The type of the issued token as defined by RFC 8693.
+	IssuedTokenType string `json:"issued_token_type"`
 }
 
 // swagger:route POST /oauth2/token oAuth2 oauth2TokenExchange
@@ -1177,6 +1204,33 @@ func (h *Handler) oauth2TokenExchange(w http.ResponseWriter, r *http.Request) {
 			events.Trace(ctx, events.TokenExchangeError, events.WithError(err))
 		}
 		return
+	}
+
+	if accessRequest.GetGrantTypes().ExactOne(string(fosite.GrantTypeTokenExchange)) {
+		exchangeSession, ok := accessRequest.GetSession().(*Session)
+		if !ok {
+			err := errors.WithStack(fosite.ErrServerError.WithHint("The token exchange session has an unexpected type."))
+			x.LogError(r, err, h.r.Logger())
+			h.r.OAuth2Provider().WriteAccessError(ctx, w, accessRequest, err)
+			events.Trace(ctx, events.TokenExchangeError, events.WithRequest(accessRequest), events.WithError(err))
+			return
+		}
+
+		var accessTokenKeyID string
+		if h.c.AccessTokenStrategy(ctx, client.AccessTokenStrategySource(accessRequest.GetClient())) == "jwt" {
+			accessTokenKeyID, err = h.r.AccessTokenJWTSigner().GetPublicKeyID(ctx)
+			if err != nil {
+				x.LogError(r, err, h.r.Logger())
+				h.r.OAuth2Provider().WriteAccessError(ctx, w, accessRequest, err)
+				events.Trace(ctx, events.TokenExchangeError, events.WithRequest(accessRequest), events.WithError(err))
+				return
+			}
+		}
+
+		exchangeSession.ClientID = accessRequest.GetClient().GetID()
+		exchangeSession.KID = accessTokenKeyID
+		exchangeSession.DefaultSession.Claims.Issuer = h.c.IssuerURL(ctx).String()
+		exchangeSession.DefaultSession.Claims.IssuedAt = time.Now().UTC()
 	}
 
 	if accessRequest.GetGrantTypes().ExactOne(string(fosite.GrantTypeClientCredentials)) ||
